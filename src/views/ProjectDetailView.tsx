@@ -9,7 +9,8 @@ import { TaskColumn } from '../components/KanbanComponents';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
     faArrowLeft, faPlus, faListCheck, faExclamationTriangle, 
-    faCalendarDay, faSitemap, faEdit, faTrash, faCalendarAlt 
+    faCalendarDay, faSitemap, faEdit, faTrash, faCalendarAlt,
+    faFileAlt, faChevronDown // <-- Add these
 } from '@fortawesome/free-solid-svg-icons';
 
 // --- Re-integrated ProjectCard for displaying children ---
@@ -74,10 +75,13 @@ interface ProjectDetailHeaderProps {
 
 const ProjectDetailHeader: React.FC<ProjectDetailHeaderProps> = React.memo(({ onBack, projectName, onAddTask }) => (
     <header className="mb-8 flex items-center justify-between border-b border-slate-200 pb-4">
-        <button onClick={onBack} className="group flex items-center gap-x-2 text-sm font-semibold text-slate-600 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
-            <FontAwesomeIcon icon={faArrowLeft} className="transition-transform group-hover:-translate-x-1" />
-            Back to Dashboard
-        </button>
+        <button 
+    onClick={onBack} 
+    className="group flex items-center gap-x-2 rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-700 shadow-sm transition duration-150 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+>
+    <FontAwesomeIcon icon={faArrowLeft} className="transition-transform group-hover:-translate-x-1" />
+    Back to Dashboard
+</button>
         <h1 className="truncate px-4 text-center text-2xl font-bold text-slate-800 sm:text-3xl">{projectName}</h1>
         <button onClick={onAddTask} className="flex items-center gap-x-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
             <FontAwesomeIcon icon={faPlus} />
@@ -86,56 +90,56 @@ const ProjectDetailHeader: React.FC<ProjectDetailHeaderProps> = React.memo(({ on
     </header>
 ));
 
-interface ProjectStatsGridProps {
-  progress: number;
-  completedTasks: number;
-  totalTasks: number;
-  overdueTasks: number;
-  daysRemaining: string | null;
-}
+// interface ProjectStatsGridProps {
+//   progress: number;
+//   completedTasks: number;
+//   totalTasks: number;
+//   overdueTasks: number;
+//   daysRemaining: string | null;
+// }
 
-const ProjectStatsGrid: React.FC<ProjectStatsGridProps> = React.memo(({ progress, completedTasks, totalTasks, overdueTasks, daysRemaining }) => (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Card 1: Progress */}
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-md">
-            <h4 className="truncate text-sm font-medium text-slate-500">Progress</h4>
-            <p className="mt-1 text-3xl font-semibold text-slate-800">{progress}%</p>
-            <div className="mt-2 h-2.5 w-full rounded-full bg-slate-200">
-                <div className="h-2.5 rounded-full bg-indigo-600" style={{ width: `${progress}%` }}></div>
-            </div>
-        </div>
-        {/* Card 2: Tasks */}
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-md">
-            <div className="flex items-center gap-x-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600"><FontAwesomeIcon icon={faListCheck} /></div>
-                <div>
-                    <h4 className="truncate text-sm font-medium text-slate-500">Tasks Completed</h4>
-                    <p className="mt-1 text-2xl font-semibold text-slate-800">{completedTasks} / {totalTasks}</p>
-                </div>
-            </div>
-        </div>
-        {/* Card 3: Overdue */}
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-md">
-            <div className="flex items-center gap-x-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-600"><FontAwesomeIcon icon={faExclamationTriangle} /></div>
-                <div>
-                    <h4 className="truncate text-sm font-medium text-slate-500">Overdue Tasks</h4>
-                    <p className="mt-1 text-2xl font-semibold text-slate-800">{overdueTasks}</p>
-                </div>
-            </div>
-        </div>
-        {/* Card 4: Due Date */}
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-md">
-            <div className="flex items-center gap-x-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-600"><FontAwesomeIcon icon={faCalendarDay} /></div>
-                <div>
-                    <h4 className="truncate text-sm font-medium text-slate-500">Due Date</h4>
-                    <p className="mt-1 text-lg font-semibold text-slate-800">{daysRemaining || 'Not set'}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-));
+// const ProjectStatsGrid: React.FC<ProjectStatsGridProps> = React.memo(({ progress, completedTasks, totalTasks, overdueTasks, daysRemaining }) => (
+//     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+//         {/* Card 1: Progress */}
+//         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-md">
+//             <h4 className="truncate text-sm font-medium text-slate-500">Progress</h4>
+//             <p className="mt-1 text-3xl font-semibold text-slate-800">{progress}%</p>
+//             <div className="mt-2 h-2.5 w-full rounded-full bg-slate-200">
+//                 <div className="h-2.5 rounded-full bg-indigo-600" style={{ width: `${progress}%` }}></div>
+//             </div>
+//         </div>
+//         {/* Card 2: Tasks */}
+//         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-md">
+//             <div className="flex items-center gap-x-3">
+//                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600"><FontAwesomeIcon icon={faListCheck} /></div>
+//                 <div>
+//                     <h4 className="truncate text-sm font-medium text-slate-500">Tasks Completed</h4>
+//                     <p className="mt-1 text-2xl font-semibold text-slate-800">{completedTasks} / {totalTasks}</p>
+//                 </div>
+//             </div>
+//         </div>
+//         {/* Card 3: Overdue */}
+//         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-md">
+//             <div className="flex items-center gap-x-3">
+//                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-600"><FontAwesomeIcon icon={faExclamationTriangle} /></div>
+//                 <div>
+//                     <h4 className="truncate text-sm font-medium text-slate-500">Overdue Tasks</h4>
+//                     <p className="mt-1 text-2xl font-semibold text-slate-800">{overdueTasks}</p>
+//                 </div>
+//             </div>
+//         </div>
+//         {/* Card 4: Due Date */}
+//         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-md">
+//             <div className="flex items-center gap-x-3">
+//                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-600"><FontAwesomeIcon icon={faCalendarDay} /></div>
+//                 <div>
+//                     <h4 className="truncate text-sm font-medium text-slate-500">Due Date</h4>
+//                     <p className="mt-1 text-lg font-semibold text-slate-800">{daysRemaining || 'Not set'}</p>
+//                 </div>
+//             </div>
+//         </div>
+//     </div>
+// ));
 
 interface ChildProjectsSectionProps {
   childProjects: Project[];
@@ -233,7 +237,7 @@ const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ project: initialP
     const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
     const [historyTask, setHistoryTask] = useState<Task | null>(null);
     const [showStrategyHistory, setShowStrategyHistory] = useState(false);
-
+    const [isDocumentVisible, setIsDocumentVisible] = useState(false); // Add this
     // --- NEW: Sync prop changes to local state ---
     // This handles navigating from one project detail view to another
     useEffect(() => {
@@ -436,23 +440,26 @@ const handleSaveMarkdown = useCallback(async (markdownContent: string) => {
                 <main>
                     {project.parentProjectId && ( // Uses local state
                         <div className="mb-6">
-                            <button onClick={() => onSelectProject(project.parentProjectId!)} className="text-sm font-semibold text-indigo-600 hover:underline">
-                                &larr; Back to Parent Project
-                            </button>
+                          <button 
+    onClick={() => onSelectProject(project.parentProjectId!)} 
+    className="rounded-lg bg-indigo-50 px-3 py-1 text-sm font-semibold text-indigo-700 transition duration-150 hover:bg-indigo-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+>
+    &larr; Back to Parent Project
+</button>
                         </div>
                     )}
-                    <p className="mx-auto mb-10 max-w-4xl text-center text-slate-600">{project.description}</p> {/* Uses local state */}
+                    {/* <p className="mx-auto mb-10 max-w-4xl text-center text-slate-600">{project.description}</p>  */}
                     {error && <div className="mb-6 rounded-lg bg-red-100 p-4 text-sm text-red-800">{error}</div>}
 
                     <div className="space-y-8">
                         
-                        <ProjectStatsGrid
+                        {/* <ProjectStatsGrid
                             progress={projectStats.progress}
                             completedTasks={projectStats.completedTasks}
                             totalTasks={projectStats.totalTasks}
                             overdueTasks={projectStats.overdueTasks}
                             daysRemaining={daysRemaining}
-                        />
+                        /> */}
 
                         <ProjectStrategy 
                             project={project} // Uses local state
@@ -460,11 +467,39 @@ const handleSaveMarkdown = useCallback(async (markdownContent: string) => {
                             onOpenHistory={() => setShowStrategyHistory(true)} 
                         />
                         
-                        <MarkdownEditor 
-        key={project.markdownPlan} // <-- Add this
-        content={project.markdownPlan} 
-        onSave={handleSaveMarkdown} 
-    />
+                       {/* --- Collapsible Project Document --- */}
+<div className="rounded-2xl bg-white shadow-md border border-slate-200">
+    {/* Header with Toggle Button */}
+    <div 
+        className="flex items-center justify-between cursor-pointer p-4 sm:p-6"
+        onClick={() => setIsDocumentVisible(prev => !prev)}
+    >
+        <h2 className="flex items-center gap-x-3 text-2xl font-semibold text-slate-700">
+            <FontAwesomeIcon icon={faFileAlt} className="text-slate-400" />
+            Project Document
+        </h2>
+        <button 
+            className="text-2xl text-slate-400 hover:text-slate-600"
+            aria-expanded={isDocumentVisible}
+        >
+            <FontAwesomeIcon 
+                icon={faChevronDown}
+                className={`transition-transform duration-300 ${isDocumentVisible ? 'rotate-180' : 'rotate-0'}`}
+            />
+        </button>
+    </div>
+
+    {/* Conditionally Rendered Editor */}
+    {isDocumentVisible && (
+        <div className="border-t border-slate-200 p-4 sm:p-6">
+            <MarkdownEditor 
+                key={project.markdownPlan} 
+                content={project.markdownPlan} 
+                onSave={handleSaveMarkdown} 
+            />
+        </div>
+    )}
+</div>
                         <ChildProjectsSection
                             childProjects={project.childProjects || []} // Uses local state
                             onSelectProject={onSelectProject}
