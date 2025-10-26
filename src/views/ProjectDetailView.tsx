@@ -302,7 +302,7 @@ const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ project, onBack, 
             {showTaskForm && (
                 <TaskForm
                     task={taskToEdit}
-                    projectId={projectId}
+                    projectId={project.id}
                     onSave={handleSaveTask}
                     onCancel={() => { setShowTaskForm(false); setTaskToEdit(null); }}
                 />
