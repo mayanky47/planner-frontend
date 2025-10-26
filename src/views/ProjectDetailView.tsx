@@ -7,7 +7,10 @@ import ProjectStrategy from '../components/ProjectStrategy';
 import { MarkdownEditor } from '../components/MarkdownEditor';
 import { TaskColumn } from '../components/KanbanComponents';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft, faPlus, faListCheck, faExclamationTriangle, faCalendarDay, faSitemap, faEdit, faTrash, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
+import { 
+    faArrowLeft, faPlus, faListCheck, faExclamationTriangle, 
+    faCalendarDay, faSitemap, faEdit, faTrash, faCalendarAlt 
+} from '@fortawesome/free-solid-svg-icons';
 
 // --- Re-integrated ProjectCard for displaying children ---
 interface ProjectCardProps {
@@ -61,17 +64,168 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelectProject, onE
     );
 };
 
+// --- Extracted Sub-Components for Readability ---
+
+interface ProjectDetailHeaderProps {
+  onBack: () => void;
+  projectName: string;
+  onAddTask: () => void;
+}
+
+const ProjectDetailHeader: React.FC<ProjectDetailHeaderProps> = React.memo(({ onBack, projectName, onAddTask }) => (
+    <header className="mb-8 flex items-center justify-between border-b border-slate-200 pb-4">
+        <button onClick={onBack} className="group flex items-center gap-x-2 text-sm font-semibold text-slate-600 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+            <FontAwesomeIcon icon={faArrowLeft} className="transition-transform group-hover:-translate-x-1" />
+            Back to Dashboard
+        </button>
+        <h1 className="truncate px-4 text-center text-2xl font-bold text-slate-800 sm:text-3xl">{projectName}</h1>
+        <button onClick={onAddTask} className="flex items-center gap-x-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
+            <FontAwesomeIcon icon={faPlus} />
+            <span className="hidden sm:inline">Add Task</span>
+        </button>
+    </header>
+));
+
+interface ProjectStatsGridProps {
+  progress: number;
+  completedTasks: number;
+  totalTasks: number;
+  overdueTasks: number;
+  daysRemaining: string | null;
+}
+
+const ProjectStatsGrid: React.FC<ProjectStatsGridProps> = React.memo(({ progress, completedTasks, totalTasks, overdueTasks, daysRemaining }) => (
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Card 1: Progress */}
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-md">
+            <h4 className="truncate text-sm font-medium text-slate-500">Progress</h4>
+            <p className="mt-1 text-3xl font-semibold text-slate-800">{progress}%</p>
+            <div className="mt-2 h-2.5 w-full rounded-full bg-slate-200">
+                <div className="h-2.5 rounded-full bg-indigo-600" style={{ width: `${progress}%` }}></div>
+            </div>
+        </div>
+        {/* Card 2: Tasks */}
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-md">
+            <div className="flex items-center gap-x-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600"><FontAwesomeIcon icon={faListCheck} /></div>
+                <div>
+                    <h4 className="truncate text-sm font-medium text-slate-500">Tasks Completed</h4>
+                    <p className="mt-1 text-2xl font-semibold text-slate-800">{completedTasks} / {totalTasks}</p>
+                </div>
+            </div>
+        </div>
+        {/* Card 3: Overdue */}
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-md">
+            <div className="flex items-center gap-x-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-600"><FontAwesomeIcon icon={faExclamationTriangle} /></div>
+                <div>
+                    <h4 className="truncate text-sm font-medium text-slate-500">Overdue Tasks</h4>
+                    <p className="mt-1 text-2xl font-semibold text-slate-800">{overdueTasks}</p>
+                </div>
+            </div>
+        </div>
+        {/* Card 4: Due Date */}
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-md">
+            <div className="flex items-center gap-x-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-600"><FontAwesomeIcon icon={faCalendarDay} /></div>
+                <div>
+                    <h4 className="truncate text-sm font-medium text-slate-500">Due Date</h4>
+                    <p className="mt-1 text-lg font-semibold text-slate-800">{daysRemaining || 'Not set'}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+));
+
+interface ChildProjectsSectionProps {
+  childProjects: Project[];
+  onSelectProject: (id: number) => void;
+  onEditProject: (project: Partial<Project>) => void;
+  onDeleteProject: (id: number) => void;
+  onAddChildProject: () => void;
+}
+
+const ChildProjectsSection: React.FC<ChildProjectsSectionProps> = React.memo(({ childProjects, onSelectProject, onEditProject, onDeleteProject, onAddChildProject }) => (
+    <div className="rounded-2xl bg-white p-4 sm:p-6 shadow-md border border-slate-200">
+        <h2 className="mb-4 flex items-center gap-x-3 border-b border-slate-200 pb-2 text-2xl font-semibold text-slate-700">
+            <FontAwesomeIcon icon={faSitemap} className="text-slate-400" />
+            Sub-Projects ({childProjects?.length || 0})
+        </h2>
+        {childProjects && childProjects.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {childProjects.map(child => (
+                    <ProjectCard key={child.id} project={child} onSelectProject={onSelectProject} onEditProject={onEditProject} onDeleteProject={onDeleteProject} />
+                ))}
+            </div>
+        ) : (
+            <p className="py-4 text-center text-sm italic text-slate-500">No sub-projects have been added yet.</p>
+        )}
+        <div className="mt-6 border-t border-slate-200 pt-4 text-center">
+            <button onClick={onAddChildProject} className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">
+                + Add Sub-Project
+            </button>
+        </div>
+    </div>
+));
+
 const DISPLAYED_STATUSES: TaskStatus[] = ['TO_DO', 'IN_PROGRESS', 'REVIEW'];
 
+type TaskBoardTasks = Record<'TO_DO' | 'IN_PROGRESS' | 'REVIEW' | 'COMPLETED', Task[]>;
+
+interface TaskBoardSectionProps {
+  isLoading: boolean;
+  tasksByStatus: TaskBoardTasks;
+  onEdit: (task: Task) => void;
+  onDelete: (id: number) => void;
+  onViewHistory: (task: Task) => void;
+  onMoveTask: (taskId: number, newStatus: TaskStatus) => void;
+  onMarkComplete: (id: number) => void;
+}
+
+const TaskBoardSection: React.FC<TaskBoardSectionProps> = React.memo(({ isLoading, tasksByStatus, onEdit, onDelete, onViewHistory, onMoveTask, onMarkComplete }) => (
+    <div className="rounded-2xl bg-slate-100 p-4 sm:p-6">
+        <h2 className="mb-4 border-b border-slate-200 pb-2 text-2xl font-semibold text-slate-700">Task Board</h2>
+        {isLoading ? <p className="text-slate-500">Loading tasks...</p> : 
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            {DISPLAYED_STATUSES.map((status) => (
+                <TaskColumn 
+                    key={status} 
+                    title={status.replace('_', ' ')} 
+                    status={status} 
+                    tasks={tasksByStatus[status]} 
+                    onEdit={onEdit} 
+                    onDelete={onDelete} 
+                    onViewHistory={onViewHistory} 
+                    onMoveTask={onMoveTask} 
+                    onMarkComplete={onMarkComplete} 
+                />
+            ))}
+        </div>
+        }
+        <p className="mt-4 text-sm text-slate-500">Note: 'Completed' tasks are hidden from the board to maintain focus.</p>
+    </div>
+));
+
+
+// --- Main ProjectDetailView Component ---
+
 interface ProjectDetailViewProps {
-    project: Project;
+    project: Project; // This is the 'initialProject'
     onBack: () => void;
     onSelectProject: (id: number) => void;
     onEditProject: (project: Partial<Project>) => void;
     onDeleteProject: (id: number) => void;
 }
 
-const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ project, onBack, onSelectProject, onEditProject, onDeleteProject }) => {
+type ProjectSavePayload = Partial<Omit<Project, 'parentProject'>> & {
+  parentProject?: { id: number };
+};
+
+
+const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ project: initialProject, onBack, onSelectProject, onEditProject, onDeleteProject }) => {
+    
+    // --- State ---
+    const [project, setProject] = useState<Project>(initialProject);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [isTasksLoading, setIsTasksLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -79,6 +233,27 @@ const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ project, onBack, 
     const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
     const [historyTask, setHistoryTask] = useState<Task | null>(null);
     const [showStrategyHistory, setShowStrategyHistory] = useState(false);
+
+    // --- NEW: Sync prop changes to local state ---
+    // This handles navigating from one project detail view to another
+    useEffect(() => {
+        setProject(initialProject);
+    }, [initialProject]);
+
+
+    // --- Data Fetching (Memoized) ---
+    const fetchProject = useCallback(async () => {
+        if (!project.id) return;
+        try {
+            const updatedProject = await makeApiCall(`${API_BASE_URL}/projects/${project.id}`, { method: 'GET' });
+            if (updatedProject) {
+                setProject(updatedProject); // Update local state
+            }
+        } catch (e) {
+            console.error("Failed to re-fetch project:", e);
+            setError("Failed to refresh project data after save.");
+        }
+    }, [project.id]); // Depends on the *current* project ID in state
 
     const fetchTasks = useCallback(async () => {
         if (!project.id) return;
@@ -95,16 +270,122 @@ const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ project, onBack, 
         } finally {
             setIsTasksLoading(false);
         }
-    }, [project.id]);
+    }, [project.id]); // Now depends on 'project.id' from state
 
-    useEffect(() => {
-        fetchTasks();
-    }, [fetchTasks]);
 
-    const onAddChildProject = () => {
+    // --- Event Handlers (All Memoized) ---
+    const onAddChildProject = useCallback(() => {
         onEditProject({ parentProjectId: project.id });
-    };
+    }, [onEditProject, project.id]);
 
+    const handleSaveProjectDetails = useCallback(async (projectData: Partial<Project>): Promise<Project | null> => {
+        try {
+            const payload: ProjectSavePayload = { ...projectData };
+            
+            if (project?.parentProjectId && !payload.parentProject) {
+                payload.parentProject = { id: project.parentProjectId };
+            }
+            if (payload.parentProject && payload.parentProjectId) {
+                delete payload.parentProjectId;
+            }
+            
+            const savedProject = await makeApiCall(`${API_BASE_URL}/projects/${project.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            // RE-FETCH THE FULL PROJECT (GET request)
+            await fetchProject();
+
+            return savedProject;
+        } catch (err) {
+            setError(`Failed to save project details. Update failed.`);
+            return null;
+        }
+    }, [project, fetchProject]); // Depends on project state and the memoized fetchProject
+
+const handleSaveMarkdown = useCallback(async (markdownContent: string) => {
+    // Await the save, but don't return its value.
+    // This makes the function's return type Promise<void>
+    await handleSaveProjectDetails({ markdownPlan: markdownContent });
+}, [handleSaveProjectDetails]);
+
+    const handleSaveTask = useCallback(async (taskData: Partial<Task>) => {
+        const isUpdate = !!taskData.id;
+        const url = isUpdate ? `${API_BASE_URL}/tasks/${taskData.id}` : `${API_BASE_URL}/tasks`;
+        const method = isUpdate ? 'PUT' : 'POST';
+        const payload = { ...taskData, project: { id: project.id } };
+        try {
+            const savedTask = await makeApiCall(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (savedTask) {
+                fetchTasks();
+                setShowTaskForm(false);
+                setTaskToEdit(null);
+            }
+            return savedTask;
+        } catch (e) {
+            setError('Failed to save task.');
+            return null;
+        }
+    }, [project.id, fetchTasks]); // Depends on project state and memoized fetchTasks
+
+    const handleDeleteTask = useCallback(async (id: number) => {
+        try {
+            await makeApiCall(`${API_BASE_URL}/tasks/${id}`, { method: 'DELETE' });
+            fetchTasks(); 
+        } catch (e) {
+            setError('Failed to delete task.');
+        }
+    }, [fetchTasks]); // Depends on memoized fetchTasks
+
+    const handleMoveTask = useCallback(async (taskId: number, newStatus: TaskStatus) => {
+        const task = tasks.find(t => t.id === taskId);
+        if (task && task.status !== newStatus) {
+            const oldStatus = task.status;
+            setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
+            
+            const savedTask = await handleSaveTask({ ...task, status: newStatus });
+            
+            if (!savedTask) {
+                setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: oldStatus } : t));
+                setError(`Failed to move task. Status reverted.`);
+            }
+        }
+    }, [tasks, handleSaveTask]); // Depends on tasks state and memoized save handler
+
+    const handleMarkComplete = useCallback((taskId: number) => {
+        if (window.confirm("Mark this task as COMPLETED?")) {
+            handleMoveTask(taskId, 'COMPLETED');
+        }
+    }, [handleMoveTask]); // Depends on memoized move handler
+
+    // Simple state setters are stable, so empty dependency arrays are fine
+    const handleEditTask = useCallback((task: Task) => { 
+        setTaskToEdit(task); 
+        setShowTaskForm(true); 
+    }, []);
+
+    const handleViewHistory = useCallback((task: Task) => { 
+        setHistoryTask(task); 
+    }, []);
+
+    const handleAddTask = useCallback(() => { 
+        setTaskToEdit(null); 
+        setShowTaskForm(true); 
+    }, []);
+
+
+    // --- Effects ---
+    // Fetches tasks when the project.id (from state) or fetchTasks function changes
+    useEffect(() => {
+        if (project.id) {
+            fetchTasks();
+        }
+    }, [project.id, fetchTasks]);
+
+
+    // --- Memoized Calculations ---
     const projectStats = useMemo(() => {
         const totalTasks = tasks.length;
         if (totalTasks === 0) return { totalTasks: 0, completedTasks: 0, progress: 0, overdueTasks: 0 };
@@ -123,203 +404,113 @@ const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ project, onBack, 
         if (diffTime < 0) return "Past Due";
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         return `${diffDays} days remaining`;
-    }, [project?.endDate]);
+    }, [project?.endDate]); // Uses local project state
 
-    const handleSaveProjectDetails = async (projectData: Partial<Project>): Promise<Project | null> => {
-        try {
-            // Start with only the changed data
-            const payload: any = { ...projectData };
-            console.log("Saving project with payload:", payload);
-            // If the project being updated is a child, ensure we send the parent
-            // relationship in the object format the backend expects.
-            if (project?.parentProjectId) {
-                payload.parentProject = { id: project.parentProjectId };
-            }
-            
-            const savedProject = await makeApiCall(`${API_BASE_URL}/projects/${project.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload), // Send the correctly structured payload
-            });
-
-            // The parent App component will handle re-fetching and updating state,
-            // which will flow back down as props.
-            return savedProject;
-        } catch (err) {
-            setError(`Failed to save project details. Update failed.`);
-            return null;
-        }
-    };
-    
-    const handleSaveMarkdown = async (markdownContent: string) => {
-        await handleSaveProjectDetails({ markdownPlan: markdownContent });
-    };
-
-    const handleSaveTask = async (taskData: Partial<Task>) => {
-        const isUpdate = !!taskData.id;
-        const url = isUpdate ? `${API_BASE_URL}/tasks/${taskData.id}` : `${API_BASE_URL}/tasks`;
-        const method = isUpdate ? 'PUT' : 'POST';
-        const payload = { ...taskData, project: { id: project.id } };
-        try {
-            const savedTask = await makeApiCall(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            if (savedTask) {
-                fetchTasks();
-                setShowTaskForm(false);
-                setTaskToEdit(null);
-            }
-            return savedTask;
-        } catch (e) {
-            setError('Failed to save task.');
-            return null;
-        }
-    };
-
-    const handleDeleteTask = async (id: number) => {
-        try {
-            await makeApiCall(`${API_BASE_URL}/tasks/${id}`, { method: 'DELETE' });
-            fetchTasks(); 
-        } catch (e) {
-            setError('Failed to delete task.');
-        }
-    };
-
-    const handleMoveTask = async (taskId: number, newStatus: TaskStatus) => {
-        const task = tasks.find(t => t.id === taskId);
-        if (task && task.status !== newStatus) {
-            const oldStatus = task.status;
-            setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
-            const savedTask = await handleSaveTask({ ...task, status: newStatus });
-            if (!savedTask) {
-                setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: oldStatus } : t));
-                setError(`Failed to move task. Status reverted.`);
-            }
-        }
-    };
-
-    const handleMarkComplete = (taskId: number) => {
-        if (window.confirm("Mark this task as COMPLETED?")) {
-            handleMoveTask(taskId, 'COMPLETED');
-        }
-    };
-
-    const handleEditTask = (task: Task) => { setTaskToEdit(task); setShowTaskForm(true); };
-    const handleViewHistory = (task: Task) => { setHistoryTask(task); };
-
-    const tasksByStatus = useMemo(() => { 
+    const tasksByStatus = useMemo((): TaskBoardTasks => { 
         const groups: Partial<Record<TaskStatus, Task[]>> = {};
         tasks.forEach(task => {
-            if (DISPLAYED_STATUSES.includes(task.status)) {
-                groups[task.status] = groups[task.status] || [];
-                groups[task.status]!.push(task);
-            }
+            groups[task.status] = groups[task.status] || [];
+            groups[task.status]!.push(task);
         });
+        
         return {
             TO_DO: groups.TO_DO || [],
             IN_PROGRESS: groups.IN_PROGRESS || [],
             REVIEW: groups.REVIEW || [],
-            COMPLETED: []
+            COMPLETED: groups.COMPLETED || []
         };
     }, [tasks]);
 
+
+    // --- Render ---
     return (
         <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8">
             <div className="mx-auto max-w-7xl">
-                <header className="mb-8 flex items-center justify-between border-b border-slate-200 pb-4">
-                    <button onClick={onBack} className="group flex items-center gap-x-2 text-sm font-semibold text-slate-600 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"><FontAwesomeIcon icon={faArrowLeft} className="transition-transform group-hover:-translate-x-1" />Back to Dashboard</button>
-                    <h1 className="truncate px-4 text-center text-2xl font-bold text-slate-800 sm:text-3xl">{project.name}</h1>
-                    <button onClick={() => { setTaskToEdit(null); setShowTaskForm(true); }} className="flex items-center gap-x-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"><FontAwesomeIcon icon={faPlus} /><span className="hidden sm:inline">Add Task</span></button>
-                </header>
+                
+                <ProjectDetailHeader 
+                    onBack={onBack}
+                    projectName={project.name} // Uses local state
+                    onAddTask={handleAddTask}  // Uses memoized handler
+                />
 
                 <main>
-                    {project.parentProjectId && (
+                    {project.parentProjectId && ( // Uses local state
                         <div className="mb-6">
                             <button onClick={() => onSelectProject(project.parentProjectId!)} className="text-sm font-semibold text-indigo-600 hover:underline">
                                 &larr; Back to Parent Project
                             </button>
                         </div>
                     )}
-                    <p className="mx-auto mb-10 max-w-4xl text-center text-slate-600">{project.description}</p>
+                    <p className="mx-auto mb-10 max-w-4xl text-center text-slate-600">{project.description}</p> {/* Uses local state */}
                     {error && <div className="mb-6 rounded-lg bg-red-100 p-4 text-sm text-red-800">{error}</div>}
 
                     <div className="space-y-8">
-                        {/* Summary Section */}
-                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                           {/* Card 1: Progress */}
-                           <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-md"><h4 className="truncate text-sm font-medium text-slate-500">Progress</h4><p className="mt-1 text-3xl font-semibold text-slate-800">{projectStats.progress}%</p><div className="mt-2 h-2.5 w-full rounded-full bg-slate-200"><div className="h-2.5 rounded-full bg-indigo-600" style={{ width: `${projectStats.progress}%` }}></div></div></div>
-                           {/* Card 2: Tasks */}
-                           <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-md"><div className="flex items-center gap-x-3"><div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600"><FontAwesomeIcon icon={faListCheck} /></div><div><h4 className="truncate text-sm font-medium text-slate-500">Tasks Completed</h4><p className="mt-1 text-2xl font-semibold text-slate-800">{projectStats.completedTasks} / {projectStats.totalTasks}</p></div></div></div>
-                           {/* Card 3: Overdue */}
-                           <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-md"><div className="flex items-center gap-x-3"><div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-600"><FontAwesomeIcon icon={faExclamationTriangle} /></div><div><h4 className="truncate text-sm font-medium text-slate-500">Overdue Tasks</h4><p className="mt-1 text-2xl font-semibold text-slate-800">{projectStats.overdueTasks}</p></div></div></div>
-                           {/* Card 4: Due Date */}
-                           <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-md"><div className="flex items-center gap-x-3"><div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-600"><FontAwesomeIcon icon={faCalendarDay} /></div><div><h4 className="truncate text-sm font-medium text-slate-500">Due Date</h4><p className="mt-1 text-lg font-semibold text-slate-800">{daysRemaining || 'Not set'}</p></div></div></div>
-                        </div>
-
-                        <ProjectStrategy project={project} onSaveProject={handleSaveProjectDetails} onOpenHistory={() => setShowStrategyHistory(true)} />
-                        <MarkdownEditor content={project.markdownPlan} onSave={handleSaveMarkdown} />
-
-                        {/* Child Projects Section */}
-                        <div className="rounded-2xl bg-white p-4 sm:p-6 shadow-md border border-slate-200">
-                            <h2 className="mb-4 flex items-center gap-x-3 border-b border-slate-200 pb-2 text-2xl font-semibold text-slate-700">
-                                <FontAwesomeIcon icon={faSitemap} className="text-slate-400" />
-                                Sub-Projects ({project.childProjects?.length || 0})
-                            </h2>
-                            {project.childProjects && project.childProjects.length > 0 ? (
-                                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                                    {project.childProjects.map(child => (
-                                        <ProjectCard key={child.id} project={child} onSelectProject={onSelectProject} onEditProject={onEditProject} onDeleteProject={onDeleteProject} />
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="py-4 text-center text-sm italic text-slate-500">No sub-projects have been added yet.</p>
-                            )}
-                            <div className="mt-6 border-t border-slate-200 pt-4 text-center">
-                                <button onClick={onAddChildProject} className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">
-                                    + Add Sub-Project
-                                </button>
-                            </div>
-                        </div>
                         
-                        {/* Task Board Section */}
-                        <div className="rounded-2xl bg-slate-100 p-4 sm:p-6">
-                            <h2 className="mb-4 border-b border-slate-200 pb-2 text-2xl font-semibold text-slate-700">Task Board</h2>
-                            {isTasksLoading ? <p className="text-slate-500">Loading tasks...</p> : 
-                            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                                {DISPLAYED_STATUSES.map((status) => (<TaskColumn key={status} title={status.replace('_', ' ')} status={status} tasks={tasksByStatus[status]} onEdit={handleEditTask} onDelete={handleDeleteTask} onViewHistory={handleViewHistory} onMoveTask={handleMoveTask} onMarkComplete={handleMarkComplete} />))}
-                            </div>
-                            }
-                            <p className="mt-4 text-sm text-slate-500">Note: 'Completed' tasks are hidden from the board to maintain focus.</p>
-                        </div>
+                        <ProjectStatsGrid
+                            progress={projectStats.progress}
+                            completedTasks={projectStats.completedTasks}
+                            totalTasks={projectStats.totalTasks}
+                            overdueTasks={projectStats.overdueTasks}
+                            daysRemaining={daysRemaining}
+                        />
+
+                        <ProjectStrategy 
+                            project={project} // Uses local state
+                            onSaveProject={handleSaveProjectDetails} // Uses memoized handler
+                            onOpenHistory={() => setShowStrategyHistory(true)} 
+                        />
+                        
+                        <MarkdownEditor 
+        key={project.markdownPlan} // <-- Add this
+        content={project.markdownPlan} 
+        onSave={handleSaveMarkdown} 
+    />
+                        <ChildProjectsSection
+                            childProjects={project.childProjects || []} // Uses local state
+                            onSelectProject={onSelectProject}
+                            onEditProject={onEditProject}
+                            onDeleteProject={onDeleteProject}
+                            onAddChildProject={onAddChildProject} // Uses memoized handler
+                        />
+                        
+                        <TaskBoardSection
+                            isLoading={isTasksLoading}
+                            tasksByStatus={tasksByStatus}
+                            onEdit={handleEditTask}         // Uses memoized handler
+                            onDelete={handleDeleteTask}     // Uses memoized handler
+                            onViewHistory={handleViewHistory} // Uses memoized handler
+                            onMoveTask={handleMoveTask}       // Uses memoized handler
+                            onMarkComplete={handleMarkComplete} // Uses memoized handler
+                        />
                     </div>
                 </main>
             </div>
-            
-
-
-
-
             
             {/* --- Modals --- */}
             {showTaskForm && (
                 <TaskForm
                     task={taskToEdit}
-                    projectId={project.id}
-                    onSave={handleSaveTask}
+                    projectId={project.id} // Uses local state
+                    onSave={handleSaveTask}  // Uses memoized handler
                     onCancel={() => { setShowTaskForm(false); setTaskToEdit(null); }}
                 />
             )}
             
-        
-           {historyTask && (
+            {historyTask && (
                 <TaskHistoryModal
                     taskId={historyTask.id}
                     taskTitle={historyTask.title}
-                    onClose={() => setHistoryTask(null)} show={false}                />
+                    onClose={() => setHistoryTask(null)}
+                    show={!!historyTask} // Correctly uses state
+                />
             )}
             
             {project && showStrategyHistory && (
                 <ProjectStrategyHistoryModal
-                    project={project}
-                    onClose={() => setShowStrategyHistory(false)} show={false}                />
+                    project={project} // Uses local state
+                    onClose={() => setShowStrategyHistory(false)}
+                    show={showStrategyHistory} // Correctly uses state
+                />
             )}
         </div>
     );
